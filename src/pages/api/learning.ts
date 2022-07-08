@@ -14,7 +14,7 @@ export default function Handler(
     data: { c: code },
     headers: {
       'Content-Type': `multipart/form-data`,
-      Cookie: phpsessid as string,
+      Cookie: `PHPSESSID=${phpsessid}`,
     },
   })
     .then(function (response) {

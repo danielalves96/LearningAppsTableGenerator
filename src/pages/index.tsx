@@ -144,7 +144,7 @@ export default function Home() {
           <br />
           <Table dataSource={results} columns={columns} />
           <br />
-          {results && (
+          {results.length > 0 && (
             <div style={{ display: `flex`, justifyContent: `end` }}>
               <ExportCSV csvData={results} fileName="Documento" />
             </div>

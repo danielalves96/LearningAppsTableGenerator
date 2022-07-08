@@ -16,7 +16,7 @@ export default function Home() {
 
   function handleSubmit(values: any) {
     axios
-      .get(`http://localhost:3000/api/learning`, {
+      .get(`/api/learning`, {
         params: {
           phpsessid: values.phpsessid,
           code: values.code,

@@ -4,7 +4,7 @@ import { Col, Row, Table } from 'antd';
 import { Button, Form, Input } from 'antd';
 import { v4 as uuidv4 } from 'uuid';
 
-import { parseISO, format } from 'date-fns';
+import { parseISO, format, subHours } from 'date-fns';
 
 import { pt } from 'date-fns/locale';
 import { ExportCSV } from '@/components/ExportCSV';
@@ -32,7 +32,7 @@ export default function Home() {
             codigo_do_app: data.App,
             tempo: `${data.Time} segundos`,
             feito_em: format(
-              parseISO(data.Created),
+              subHours(parseISO(data.Created), 5),
               `'Dia' dd 'de' MMMM', às ' HH:mm'h'`,
               { locale: pt },
             ),

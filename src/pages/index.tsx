@@ -1,73 +1,154 @@
-import Head from 'next/head';
-import Image from 'next/image';
+import axios from 'axios';
+import { useState } from 'react';
+import { Col, Row, Table } from 'antd';
+import { Button, Form, Input } from 'antd';
+import { v4 as uuidv4 } from 'uuid';
 
-import styles from '@/styles/Home.module.css';
+import { parseISO, format } from 'date-fns';
+
+import { pt } from 'date-fns/locale';
+import { ExportCSV } from '@/components/ExportCSV';
 
 export default function Home() {
+  const [results, setResults] = useState([]);
+  const [linkCode, setLinkCode] = useState(``);
+  const [shareLink, setShareLink] = useState(``);
+
+  function handleSubmit(values: any) {
+    axios
+      .get(`http://localhost:3000/api/learning`, {
+        params: {
+          phpsessid: values.phpsessid,
+          code: values.code,
+        },
+      })
+      .then(function (response) {
+        const { data } = response;
+
+        const mapper = data.results.map((data: any) => {
+          return {
+            key: uuidv4(),
+            nome: data.Username,
+            codigo_do_app: data.App,
+            tempo: `${data.Time} segundos`,
+            feito_em: format(
+              parseISO(data.Created),
+              `'Dia' dd 'de' MMMM', às ' HH:mm'h'`,
+              { locale: pt },
+            ),
+          };
+        });
+
+        console.log(mapper);
+        setResults(mapper);
+        setLinkCode(`https://learningapps.org/watch?v=${values.code}`);
+        setShareLink(`https://learningapps.org/display?v=${values.code}`);
+      });
+  }
+
+  const onFinishFailed = (errorInfo: any) => {
+    console.log(`Failed:`, errorInfo);
+  };
+
+  const columns = [
+    {
+      title: `Nome`,
+      dataIndex: `nome`,
+      key: `nome`,
+    },
+    {
+      title: `Código do app`,
+      dataIndex: `codigo_do_app`,
+      key: `codigo_do_app`,
+    },
+    {
+      title: `Tempo para execução`,
+      dataIndex: `tempo`,
+      key: `tempo`,
+    },
+    {
+      title: `Data de execução`,
+      dataIndex: `feito_em`,
+      key: `feito_em`,
+    },
+  ];
+
   return (
-    <div className={styles.container}>
-      <Head>
-        <title>TypeScript starter for Next.js</title>
-        <meta
-          name="description"
-          content="TypeScript starter for Next.js that includes all you need to build amazing apps"
-        />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
-
-      <main className={styles.main}>
-        <h1 className={styles.title}>
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
-        </h1>
-
-        <p className={styles.description}>
-          Get started by editing{` `}
-          <code className={styles.code}>src/pages/index.tsx</code>
-        </p>
-
-        <div className={styles.grid}>
-          <a href="https://nextjs.org/docs" className={styles.card}>
-            <h2>Documentation &rarr;</h2>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
-
-          <a href="https://nextjs.org/learn" className={styles.card}>
-            <h2>Learn &rarr;</h2>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/master/examples"
-            className={styles.card}
+    <>
+      <Row>
+        <Col span={12} offset={6}>
+          <div
+            style={{
+              display: `flex`,
+              justifyContent: `center`,
+              marginTop: 30,
+              marginBottom: 50,
+            }}
           >
-            <h2>Examples &rarr;</h2>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
+            <img src="http://asa.my1.ru/interakt_1.jpg" alt="" />
+          </div>
 
-          <a
-            href="https://vercel.com/new?utm_source=typescript-nextjs-starter"
-            className={styles.card}
+          <Form
+            name="basic"
+            initialValues={{ remember: true }}
+            onFinish={handleSubmit}
+            onFinishFailed={onFinishFailed}
+            autoComplete="off"
           >
-            <h2>Deploy &rarr;</h2>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
-        </div>
-      </main>
+            <Form.Item
+              label="PHPSESSID"
+              name="phpsessid"
+              rules={[{ required: true, message: `Insira um PHPSESSID!` }]}
+            >
+              <Input />
+            </Form.Item>
 
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com?utm_source=typescript-nextjs-starter"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{` `}
-          <span className={styles.logo}>
-            <Image src="/vercel.svg" alt="Vercel Logo" width={72} height={16} />
-          </span>
-        </a>
-      </footer>
-    </div>
+            <Form.Item
+              label="Código do jogo"
+              name="code"
+              rules={[{ required: true, message: `Insira o código do game!` }]}
+            >
+              <Input />
+            </Form.Item>
+
+            <Form.Item>
+              <div style={{ display: `flex`, justifyContent: `end` }}>
+                <Button type="primary" htmlType="submit">
+                  Buscar
+                </Button>
+              </div>
+            </Form.Item>
+          </Form>
+
+          {linkCode && (
+            <div
+              style={{
+                display: `flex`,
+                justifyContent: `center`,
+                flexDirection: `column`,
+              }}
+            >
+              <span>Link do game é: {` `}</span>
+              <a href={linkCode} target="_blank" rel="noreferrer">
+                {linkCode}
+              </a>
+              <br />
+              <span>Link para compartilhar o game é: {` `}</span>
+              <a href={shareLink} target="_blank" rel="noreferrer">
+                {shareLink}
+              </a>
+            </div>
+          )}
+
+          <br />
+          <br />
+          <Table dataSource={results} columns={columns} />
+          <br />
+          <div style={{ display: `flex`, justifyContent: `end` }}>
+            <ExportCSV csvData={results} fileName="Documento" />
+          </div>
+        </Col>
+      </Row>
+    </>
   );
 }
